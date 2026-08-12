@@ -166,4 +166,84 @@ Task {
     4. free function is flexible and reusable, can be called by anyone. whereas optionB is tied to specific Database actor
  */
 
-//===========================================================================================
+
+
+//MARK: - =========== Q6 ===============
+
+@MainActor
+class UserViewModel {
+    var title: String = ""
+    
+    func updateTitle() {
+        Task {
+            title = "Updated from Task"
+        }
+        
+        // This gives error
+//        Task.detached {
+//            title = "Updated from detached Task"
+//        }
+        
+        // Solution for Task.detached, explicity hop on to MainActor
+        Task.detached {
+            await MainActor.run {
+                self.title = "Updated from detached Task"
+            }
+        }
+    }
+}
+
+/*
+    Q1. Task { } — which isolation domain does it inherit?
+    Q2. Task.detached { } — which isolation domain does it run on?
+    Q3. Which one will give compile error and why?
+ 
+    A1. It inherits MainActor isolation, from its enclosing scope
+    A2. It runs on non isolated domain, because detached itself says it is detached from any enclosing context
+    A3. Task.detached will give compile time error, because title is MainActor isolated property which is being mutated from a nonisolated context
+ */
+
+//MARK: - =========== Q7 ===============
+
+actor DataManager {
+    var data: [String] = []
+    
+    func updateData() async {
+        let task1 = Task {
+            return "Data1"
+        }
+        
+        let task2 = Task.detached {
+            return "Data 2"
+        }
+        
+        let result1 = await task1.value
+        let result2 = await task2.value
+        
+        data.append(result1)
+        data.append(result2)
+    }
+}
+
+/*
+ Four questions :
+
+    1. Task { } inside processData() — which isolation does it inherit?
+    2. Task.detached { } — which isolation does it run on?
+    3. data.append(result1) and data.append(result2) — do they need await?
+    4. Is there any difference in performance between Task { } and Task.detached { } here?
+ 
+ Answers :
+    1. It inherits actor DataManager isolation, runs inside DataManager's executor
+    2. No isolation, as it is detached
+    3. No, because data is also inside DataManager actor isolation
+        await can be of 2 types :
+        - Isolation boundary crossing : This means you are calling an actor bound method or property from outside of it
+        - Waiting concurrent work : Wait until task finishes, eg: await task1.value
+    4. Not performance difference, but scheduling difference, as Task has highest priority and Task.detached has default priority that means whenever system wants it can perform Task.detached
+ */
+
+
+/*
+ Moving values into or out of an isolation domain is known as crossing an isolation boundary
+ */
