@@ -2,75 +2,76 @@
 
 import Foundation
 
-///*
-// What is TaskCancellation
-// - Task Cancellation in Swift is cooperative
-// - It means, you REQUEST Cancellation, task decides when to stop
-// */
-//let task = Task {
-//    // task must check for Cancellation
-//    // it doesn't stop automatically
-//}
-//task.cancel() // requests Cancellation, doesn't force stop
-//
-///*
-// 
-// Other languages (forceful):
-// task.cancel() → task immediately killed ❌
-//               → unsafe, resources not cleaned up
-//
-// Swift (cooperative):
-// task.cancel() → sets cancellation flag ✅
-//               → task checks flag and stops gracefully
-//               → resources cleaned up properly ✅
-// 
-// */
-//
-//// Three ways to handle Cancellation
-//
-//// 1. Task.isCancelled  - Check flag
-//
-//let task2 = Task {
-//    for i in 1...1000 {
-//        // Check before each iteration
-//        if Task.isCancelled {
-//            print("Task Cancelled, stopping at \(i)")
-//            return  // graceful exit
-//        }
-//        print(i)
-//    }
-//}
-//
-//task2.cancel()
-//
-//// 2. try Task.checkCancellation - throws if cancelled
-//
-//let task3 = Task {
-//    for i in 1...1000 {
-//        try Task.checkCancellation()    // Throws CancellationError is Cancelled
-//        print(i)
-//    }
-//}
-//
-//task3.cancel()
-//do {
-//    try await task3.value
-//} catch is CancellationError {
-//    print("Task was Cancelled")
-//} catch {
-//    print("Other Error : \(error)")
-//}
-//
-//// 3. Task.sleep - automatically throws on cancellation
-//
-//let task4 = Task {
-//    print("Task started")
-//    
-//    try await Task.sleep(nanoseconds: 5_000_000_000)
-//    print("completed")
-//}
-//
-//task4.cancel()
+/*
+ What is TaskCancellation
+ - Task Cancellation in Swift is cooperative
+ - It means, you REQUEST Cancellation, task decides when to stop
+ */
+let task = Task {
+    // task must check for Cancellation
+    // it doesn't stop automatically
+}
+task.cancel() // requests Cancellation, doesn't force stop
+
+/*
+ 
+ Other languages (forceful):
+ task.cancel() → task immediately killed ❌
+               → unsafe, resources not cleaned up
+
+ Swift (cooperative):
+ task.cancel() → sets cancellation flag ✅
+               → task checks flag and stops gracefully
+               → resources cleaned up properly ✅
+ 
+ */
+
+// Three ways to handle Cancellation
+
+// 1. Task.isCancelled  - Check flag
+
+let task2 = Task {
+    for i in 1...1000 {
+        // Check before each iteration
+        if Task.isCancelled {
+            print("Task Cancelled, stopping at \(i)")
+            return  // graceful exit
+        }
+        print(i)
+    }
+}
+
+task2.cancel()
+
+// 2. try Task.checkCancellation - throws if cancelled
+
+let task3 = Task {
+    for i in 1...1000 {
+        try Task.checkCancellation()    // Throws CancellationError is Cancelled
+        print(i)
+    }
+}
+
+task3.cancel()
+
+do {
+    try await task3.value
+} catch is CancellationError {
+    print("Task was Cancelled")
+} catch {
+    print("Other Error : \(error)")
+}
+
+// 3. Task.sleep - automatically throws on cancellation
+
+let task4 = Task {
+    print("Task started")
+    
+    try await Task.sleep(nanoseconds: 5_000_000_000)
+    print("completed")
+}
+
+task4.cancel()
 
 /*
  Timeline:
